@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>價格卡排版</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥬</text></svg>">
+<style>
+  :root{
+    --bg:#f3f1ec; --ink:#16130f; --muted:#6f675c; --line:#ded7cb;
+    --field:#ffffff; --leaf:#2f6b3a; --price:#c8102e;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141310; --ink:#f2efe8; --muted:#a49b8d; --line:#3a362f; --field:#211f1a;
+    }
+  }
+  :root[data-theme="dark"]{--bg:#141310;--ink:#f2efe8;--muted:#a49b8d;--line:#3a362f;--field:#211f1a}
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:system-ui,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+    font-size:16px; line-height:1.5; -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 60px}
+  h1{font-size:21px;font-weight:800;margin:0 0 2px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  input,select{
+    width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:8px;
+    background:var(--field);color:var(--ink);font:inherit;font-size:16px;
+  }
+  input:focus,select:focus{outline:2px solid var(--leaf);outline-offset:1px}
+  .row{display:flex;gap:9px;margin-bottom:10px}
+  .row>div{flex:1;min-width:0}
+  .row .narrow{flex:0 0 100px}
+  input[type=range]{padding:0;border:none;background:transparent;accent-color:var(--leaf);height:26px}
+  .tune{display:flex;gap:9px;margin-bottom:8px}
+  .tune>div{flex:1;min-width:0}
+  .tune label{display:flex;justify-content:space-between}
+  .tune b{font-weight:700;color:var(--ink)}
+  .check{display:flex;align-items:center;gap:8px;margin:4px 0 12px;font-size:14px}
+  .check input{width:auto}
+
+  .sizes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+  .sizes button{
+    background:transparent;border:1px solid var(--line);color:var(--ink);
+    padding:8px 4px;font-size:14px;line-height:1.25;font-weight:700;
+  }
+  .sizes button small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+  .sizes button[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
+  .sizes button[aria-pressed="true"] small{color:rgba(255,255,255,.85)}
+  @media (max-width:520px){.sizes{grid-template-columns:repeat(2,1fr)}}
+
+  button{font:inherit;font-weight:700;border-radius:8px;border:1px solid transparent;padding:11px 14px;cursor:pointer}
+  button:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+  .primary{background:var(--leaf);color:#fff;flex:1}
+  .ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .danger{background:transparent;color:var(--price);border-color:var(--line)}
+  .btns{display:flex;gap:9px}
+
+  .panel{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--field)}
+  .panel h2{font-size:14px;font-weight:700;margin:0 0 12px;color:var(--muted)}
+
+  .tools{display:flex;gap:9px;align-items:center;margin:22px 0 10px;flex-wrap:wrap}
+  .tools .hint{color:var(--muted);font-size:13px;flex:1;min-width:140px}
+
+  .stage{overflow:hidden}
+  .sheet{position:relative;margin-bottom:14px}
+  .sheet-label{font-size:12px;color:var(--muted);margin:0 0 4px}
+  .page{
+    width:210mm;height:297mm;background:#fff;position:absolute;left:0;top:0;
+    transform-origin:top left;box-shadow:0 2px 14px rgba(0,0,0,.16);overflow:hidden;
+  }
+
+  .card{
+    position:absolute;background:#fff;color:#16130f;overflow:hidden;
+    padding:var(--pad);padding-bottom:calc(var(--pad) + var(--keep,0mm));
+    display:flex;flex-direction:column;
+    outline:.2mm dashed #c4c4c4;touch-action:none;user-select:none;
+  }
+  .card.sale{background:#c8102e;color:#fff}
+  .card.sel{outline:2px solid #2f6b3a;outline-offset:0;z-index:2}
+  .grip{
+    position:absolute;right:0;bottom:0;width:7mm;height:7mm;
+    background:#2f6b3a;border-radius:7mm 0 0 0;touch-action:none;display:none;z-index:3;
+  }
+  .card.sel .grip{display:block}
+  .keep{
+    position:absolute;left:0;right:0;bottom:0;height:var(--keep);
+    background:repeating-linear-gradient(135deg,rgba(0,0,0,.05) 0 2mm,transparent 2mm 4mm);
+    border-top:.2mm dashed #bbb;color:#999;font-size:2.6mm;
+    display:flex;align-items:center;justify-content:center;pointer-events:none;
+  }
+
+  .c-head{min-width:0}
+  .c-name{font-size:calc(var(--u)*4.4);font-weight:900;line-height:1.08;letter-spacing:-.01em;word-break:break-word}
+  .c-note{font-size:calc(var(--u)*1.6);color:#6f675c;margin-top:calc(var(--u)*.6);line-height:1.3}
+  .sale .c-note{color:rgba(255,255,255,.85)}
+  .c-mid{margin-top:auto;display:flex;align-items:baseline;gap:calc(var(--u)*.5);white-space:nowrap}
+  .c-cur{font-size:calc(var(--u)*2.4);font-weight:800;color:#c8102e}
+  .c-price{font-size:calc(var(--u)*8);font-weight:900;line-height:.86;color:#c8102e;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+  .c-unit{font-size:calc(var(--u)*2.2);font-weight:700}
+  .sale .c-cur,.sale .c-price{color:#fff}
+  .c-foot{margin-top:calc(var(--u)*1);padding-top:calc(var(--u)*.6);border-top:calc(var(--u)*.4) solid #2f6b3a;font-size:calc(var(--u)*1.5);font-weight:700;white-space:nowrap;overflow:hidden}
+  .sale .c-foot{border-top-color:#fff}
+
+  /* 橫條卡：冰箱內-小 / 冰箱內-大 / 常溫卡-小 */
+  .card.strip{
+    display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:minmax(0,1fr) auto;
+    column-gap:calc(var(--u)*1.2);border-left:calc(var(--u)*.7) solid #2f6b3a;
+  }
+  .card.strip.sale{border-left-color:#fff}
+  .strip .c-head{grid-column:1;grid-row:1;align-self:center;overflow:hidden}
+  .strip .c-name{font-size:calc(var(--u)*3.2);line-height:1.1;white-space:nowrap;word-break:normal}
+  .strip .c-note{font-size:calc(var(--u)*1.2);margin-top:calc(var(--u)*.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .strip .c-mid{grid-column:2;grid-row:1/3;margin:0;align-self:center;gap:calc(var(--u)*.3)}
+  .strip .c-cur{font-size:calc(var(--u)*2)}
+  .strip .c-price{font-size:calc(var(--u)*5.6)}
+  .strip .c-unit{font-size:calc(var(--u)*1.8)}
+  .strip .c-foot{grid-column:1;grid-row:2;margin:0;padding:0;border:none;font-size:calc(var(--u)*1.1);color:#2f6b3a}
+  .strip.sale .c-foot{color:#fff}
+
+  .safe{position:absolute;left:3mm;top:3mm;right:3mm;bottom:3mm;border:1px dashed #9ec4a6;pointer-events:none}
+  .empty-note{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#a9a296;font-size:5mm;pointer-events:none;
+  }
+
+  @page{size:A4;margin:0}
+  @media print{
+    body{background:#fff}
+    .noprint{display:none!important}
+    .wrap{max-width:none;padding:0;margin:0}
+    .stage{overflow:visible;height:auto!important}
+    .sheet{width:210mm!important;height:297mm!important;margin:0;break-after:page;page-break-after:always}
+    .sheet:last-child{break-after:auto;page-break-after:auto}
+    .page{transform:none!important;box-shadow:none;position:relative}
+    .card{outline:none}
+    .card.cut{outline:.2mm dashed #cfcfcf}
+    .card.sel{outline:none}
+    .card.sel.cut{outline:.2mm dashed #cfcfcf}
+    .grip,.empty-note,.keep{display:none!important}
+    .card.sale,.card.strip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="noprint">
+    <h1>價格卡排版</h1>
+    <p class="sub">選尺寸、填內容、加入。卡片在 A4 上可拖動，排不下會自動開新頁。</p>
+
+    <div class="panel">
+      <h2 id="mode">新增卡片</h2>
+      <label>卡片尺寸</label>
+      <div class="sizes" id="sizes"></div>
+      <div class="row">
+        <div><label for="f-name">品名</label><input id="f-name" placeholder="高麗菜" autocomplete="off"></div>
+      </div>
+      <div class="row">
+        <div><label for="f-price">價格</label><input id="f-price" inputmode="decimal" placeholder="45" autocomplete="off"></div>
+        <div class="narrow"><label for="f-unit">單位</label><input id="f-unit" placeholder="／斤" autocomplete="off"></div>
+      </div>
+      <div class="row">
+        <div><label for="f-note">產地／規格</label><input id="f-note" placeholder="雲林西螺・約1.2kg" autocomplete="off"></div>
+      </div>
+      <div class="check"><input type="checkbox" id="f-sale"><label for="f-sale" style="margin:0;color:inherit">紅底特價卡</label></div>
+      <div class="tune">
+        <div><label for="f-pad">格內留白 <b id="v-pad">4mm</b></label><input type="range" id="f-pad" min="0" max="16" step="0.5" value="4"></div>
+        <div><label for="f-fs">字體大小 <b id="v-fs">100%</b></label><input type="range" id="f-fs" min="50" max="180" step="5" value="100"></div>
+      </div>
+      <button class="ghost" id="applyall" style="width:100%;margin-bottom:12px">這兩項套用到全部卡片</button>
+      <div class="btns">
+        <button class="primary" id="submit">加入卡片</button>
+        <button class="ghost" id="dup" hidden>複製</button>
+        <button class="danger" id="del" hidden>刪除</button>
+        <button class="ghost" id="cancel" hidden>取消選取</button>
+      </div>
+    </div>
+
+    <div class="tools">
+      <span class="hint" id="hint">先加一張卡片。</span>
+      <button class="ghost" id="tidy">自動排整齊</button>
+      <button class="primary" id="print" style="flex:0 0 auto">列印</button>
+    </div>
+    <div class="row">
+      <div><label for="f-shop">卡片下方店名</label><input id="f-shop" value="258民生雜糧行"></div>
+      <div class="narrow" style="flex:0 0 130px">
+        <label for="f-cut">裁切虛線</label>
+        <select id="f-cut"><option value="1">印出來</option><option value="0">不印</option></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+(function(){
+  var KEY='pricecards.a4.v1';
+  var W=210, H=297, M=3, MINW=40, MINH=28;
+  /* 尺寸：寬 w × 高 h（mm）；keep = 底部留白 */
+  var TYPES={
+    rs:{name:'常溫卡-小', dim:'6×15cm・留底2cm', w:150, h:60,  keep:20, strip:true,  lock:false, pad:3},
+    fs:{name:'冰箱內-小', dim:'3×8cm・固定',     w:80,  h:30,  keep:0,  strip:true,  lock:true,  pad:2},
+    fl:{name:'冰箱內-大', dim:'4×16cm',          w:160, h:40,  keep:0,  strip:true,  lock:false, pad:3},
+    a4:{name:'A4 四格',   dim:'10.2×14.55cm',    w:102, h:145.5,keep:0, strip:false, lock:false, pad:4}
+  };
+  var ORDER=['rs','fs','fl','a4'];
+  var cards=[], shop='258民生雜糧行', cut=true, sel=null, seq=1, curT='rs';
+  var fsD=100;
+  var pxmm=1, k=1;
+
+  function el(id){return document.getElementById(id)}
+  var stage=el('stage');
+
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function clamp(v,a,b){return v<a?a:(v>b?b:v)}
+  function T(c){return TYPES[c.t]||TYPES.a4}
+  function byId(id){return cards.filter(function(c){return c.id===id})[0]}
+
+  function measure(){
+    var p=document.createElement('div');
+    p.style.cssText='position:absolute;visibility:hidden;width:100mm';
+    document.body.appendChild(p);
+    pxmm=p.getBoundingClientRect().width/100;
+    document.body.removeChild(p);
+  }
+  function fit(){
+    k=Math.min(1, stage.clientWidth/(W*pxmm));
+    Array.prototype.forEach.call(stage.querySelectorAll('.sheet'),function(s){
+      s.style.width=(W*pxmm*k)+'px'; s.style.height=(H*pxmm*k)+'px';
+      s.querySelector('.page').style.transform='scale('+k+')';
+    });
+  }
+
+  /* ---- 擺放 ---- */
+  function overlaps(list,p,x,y,w,h,skip){
+    return list.some(function(c){
+      return c!==skip && c.p===p && x<c.x+c.w-.01 && x+w>c.x+.01 && y<c.y+c.h-.01 && y+h>c.y+.01;
+    });
+  }
+  function inside(x,y,w,h){return x>=M-.01 && y>=M-.01 && x+w<=W-M+.01 && y+h<=H-M+.01}
+  function findSlot(list,w,h,skip){
+    var n=0; list.forEach(function(c){ if(c!==skip) n=Math.max(n,c.p+1); });
+    for(var p=0;p<n;p++){
+      var xs=[M], ys=[M];
+      list.forEach(function(c){ if(c.p===p && c!==skip){ xs.push(c.x+c.w); ys.push(c.y+c.h); } });
+      xs.sort(function(a,b){return a-b}); ys.sort(function(a,b){return a-b});
+      for(var i=0;i<ys.length;i++) for(var j=0;j<xs.length;j++){
+        if(inside(xs[j],ys[i],w,h) && !overlaps(list,p,xs[j],ys[i],w,h,skip)) return {p:p,x:xs[j],y:ys[i]};
+      }
+    }
+    return {p:n,x:M,y:M};
+  }
+  function compact(){
+    var used=[]; cards.forEach(function(c){ if(used.indexOf(c.p)<0) used.push(c.p); });
+    used.sort(function(a,b){return a-b});
+    cards.forEach(function(c){ c.p=used.indexOf(c.p); });
+  }
+
+  function load(){
+    try{
+      var d=JSON.parse(localStorage.getItem(KEY)||'null');
+      if(d){
+        if(Array.isArray(d.cards)) cards=d.cards;
+        if(d.shop) shop=d.shop;
+        if(typeof d.cut==='boolean') cut=d.cut;
+        if(typeof d.fsD==='number') fsD=d.fsD;
+        if(d.curT && TYPES[d.curT]) curT=d.curT;
+        cards.forEach(function(c){
+          if(c.id>=seq) seq=c.id+1;
+          if(!TYPES[c.t]) c.t='a4';
+          if(typeof c.p!=='number') c.p=0;
+          if(T(c).lock){ c.w=T(c).w; c.h=T(c).h; }
+          c.w=Math.min(c.w,W-2*M); c.h=Math.min(c.h,H-2*M);
+          c.x=clamp(c.x,M,W-M-c.w); c.y=clamp(c.y,M,H-M-c.h);
+        });
+        compact();
+      }
+    }catch(e){}
+    el('f-shop').value=shop;
+    el('f-cut').value=cut?'1':'0';
+    setTune(TYPES[curT].pad,fsD);
+  }
+  function save(){
+    try{localStorage.setItem(KEY,JSON.stringify({cards:cards,shop:shop,cut:cut,fsD:fsD,curT:curT}));}catch(e){}
+  }
+
+  /* ---- 字體單位與自動縮字 ---- */
+  function baseU(c){
+    var t=T(c), fs=(c.fs==null?100:c.fs)/100;
+    return t.strip ? (c.h-t.keep)/12*fs : c.w/33*fs;
+  }
+  function fitCard(node,c){
+    var u=baseU(c), f=1;
+    var head=node.querySelector('.c-head');
+    node.style.setProperty('--u',u+'mm');
+    for(var i=0;i<14;i++){
+      var over=T(c).strip
+        ? (head.scrollWidth>head.clientWidth+1 || head.scrollHeight>head.clientHeight+1)
+        : (node.scrollHeight>node.clientHeight+1 || node.scrollWidth>node.clientWidth+1);
+      if(!over) break;
+      f-=.06; node.style.setProperty('--u',(u*f)+'mm');
+    }
+  }
+
+  function sizeButtons(){
+    el('sizes').innerHTML=ORDER.map(function(key){
+      var t=TYPES[key];
+      return '<button type="button" data-t="'+key+'" aria-pressed="false">'+t.name+'<small>'+t.dim+'</small></button>';
+    }).join('');
+  }
+  function markSize(key){
+    Array.prototype.forEach.call(el('sizes').querySelectorAll('button'),function(b){
+      b.setAttribute('aria-pressed', b.dataset.t===key?'true':'false');
+    });
+  }
+
+  function cardNode(c){
+    var t=T(c), d=document.createElement('div');
+    d.className='card'+(t.strip?' strip':'')+(c.sale?' sale':'')+(cut?' cut':'')+(sel===c.id?' sel':'');
+    d.dataset.id=c.id;
+    d.style.left=c.x+'mm'; d.style.top=c.y+'mm';
+    d.style.width=c.w+'mm'; d.style.height=c.h+'mm';
+    d.style.setProperty('--pad',(c.pad==null?t.pad:c.pad)+'mm');
+    d.style.setProperty('--keep',t.keep+'mm');
+    d.innerHTML=
+      '<div class="c-head"><div class="c-name">'+esc(c.name)+'</div>'+
+      (c.note?'<div class="c-note">'+esc(c.note)+'</div>':'')+'</div>'+
+      '<div class="c-mid"><span class="c-cur">$</span>'+
+      '<span class="c-price">'+esc(c.price)+'</span>'+
+      '<span class="c-unit">'+esc(c.unit||'')+'</span></div>'+
+      '<div class="c-foot">'+esc(shop)+'</div>'+
+      (t.keep?'<div class="keep noprint">留底 '+(t.keep/10)+'cm</div>':'')+
+      (t.lock?'':'<div class="grip"></div>');
+    return d;
+  }
+
+  function render(){
+    stage.innerHTML='';
+    var n=1; cards.forEach(function(c){ n=Math.max(n,c.p+1); });
+    for(var p=0;p<n;p++){
+      var sheet=document.createElement('div'); sheet.className='sheet';
+      var page=document.createElement('div'); page.className='page'; page.dataset.p=p;
+      page.innerHTML='<div class="safe noprint"></div>'+
+        (cards.length?'':'<div class="empty-note noprint">A4 空白頁</div>');
+      sheet.appendChild(page);
+      if(n>1){
+        var lab=document.createElement('p'); lab.className='sheet-label noprint';
+        lab.textContent='第 '+(p+1)+' 頁'; stage.appendChild(lab);
+      }
+      stage.appendChild(sheet);
+      cards.forEach(function(c){ if(c.p===p) page.appendChild(cardNode(c)); });
+    }
+    fit();
+    cards.forEach(function(c){
+      var node=stage.querySelector('.card[data-id="'+c.id+'"]'); if(node) fitCard(node,c);
+    });
+
+    var s=byId(sel);
+    el('mode').textContent=s?('編輯：'+s.name):'新增卡片';
+    el('submit').textContent=s?'更新':'加入卡片';
+    ['dup','del','cancel'].forEach(function(id){el(id).hidden=!s});
+    markSize(s?s.t:curT);
+    el('hint').textContent=cards.length
+      ? (s?(T(s).lock?'拖動移動。這個尺寸固定不能改大小。':'拖動移動，拉右下角綠色角改大小。')
+          :'點一下卡片可編輯。共 '+cards.length+' 張、'+n+' 頁。')
+      : '先加一張卡片。';
+    if(s){
+      el('f-name').value=s.name; el('f-price').value=s.price;
+      el('f-unit').value=s.unit||''; el('f-note').value=s.note||'';
+      el('f-sale').checked=!!s.sale;
+      setTune(s.pad==null?T(s).pad:s.pad, s.fs==null?100:s.fs);
+    }
+  }
+
+  function clearForm(){
+    ['f-name','f-price','f-note'].forEach(function(i){el(i).value=''});
+    el('f-sale').checked=false;
+  }
+
+  el('sizes').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    var key=b.dataset.t, t=TYPES[key], s=byId(sel);
+    if(s){
+      if(s.t===key) return;
+      s.t=key; s.w=t.w; s.h=t.h; s.pad=t.pad;
+      if(!inside(s.x,s.y,s.w,s.h) || overlaps(cards,s.p,s.x,s.y,s.w,s.h,s)){
+        var pos=findSlot(cards,s.w,s.h,s); s.p=pos.p; s.x=pos.x; s.y=pos.y;
+      }
+      compact(); save(); render();
+    }else{
+      curT=key; setTune(t.pad,fsD); markSize(key); save();
+    }
+  });
+
+  el('submit').addEventListener('click',function(){
+    var name=el('f-name').value.trim(), price=el('f-price').value.trim();
+    if(!name){el('f-name').focus();return}
+    if(!price){el('f-price').focus();return}
+    var data={name:name,price:price,unit:el('f-unit').value.trim(),
+              note:el('f-note').value.trim(),sale:el('f-sale').checked};
+    var s=byId(sel);
+    if(s){ Object.assign(s,data); }
+    else{
+      var t=TYPES[curT], pos=findSlot(cards,t.w,t.h,null);
+      cards.push(Object.assign({id:seq++,t:curT,p:pos.p,x:pos.x,y:pos.y,w:t.w,h:t.h,
+        pad:parseFloat(el('f-pad').value),fs:parseInt(el('f-fs').value,10)},data));
+      clearForm();
+    }
+    save(); render();
+    if(!s) el('f-name').focus();
+  });
+
+  el('del').addEventListener('click',function(){
+    cards=cards.filter(function(c){return c.id!==sel});
+    sel=null; clearForm(); compact(); save(); render();
+  });
+  el('dup').addEventListener('click',function(){
+    var s=byId(sel); if(!s) return;
+    var pos=findSlot(cards,s.w,s.h,null);
+    var n=Object.assign({},s,{id:seq++,p:pos.p,x:pos.x,y:pos.y});
+    cards.push(n); sel=n.id; save(); render();
+  });
+  el('cancel').addEventListener('click',function(){ sel=null; clearForm(); setTune(TYPES[curT].pad,fsD); render(); });
+
+  el('tidy').addEventListener('click',function(){
+    var list=cards.slice().sort(function(a,b){
+      return ORDER.indexOf(a.t)-ORDER.indexOf(b.t) || b.h-a.h || a.id-b.id;
+    });
+    var placed=[];
+    list.forEach(function(c){
+      if(T(c).lock){ c.w=T(c).w; c.h=T(c).h; }
+      var pos=findSlot(placed,c.w,c.h,null);
+      c.p=pos.p; c.x=pos.x; c.y=pos.y; placed.push(c);
+    });
+    save(); render();
+  });
+
+  function setTune(pad,fs){
+    el('f-pad').value=pad; el('v-pad').textContent=pad+'mm';
+    el('f-fs').value=fs;  el('v-fs').textContent=fs+'%';
+  }
+  function tuned(){
+    var pad=parseFloat(el('f-pad').value), fs=parseInt(el('f-fs').value,10);
+    el('v-pad').textContent=pad+'mm'; el('v-fs').textContent=fs+'%';
+    var s=byId(sel);
+    if(s){
+      s.pad=pad; s.fs=fs;
+      var n=stage.querySelector('.card[data-id="'+s.id+'"]');
+      if(n){ n.style.setProperty('--pad',pad+'mm'); fitCard(n,s); }
+    }else{ fsD=fs; }
+  }
+  el('f-pad').addEventListener('input',tuned);
+  el('f-fs').addEventListener('input',tuned);
+  el('f-pad').addEventListener('change',save);
+  el('f-fs').addEventListener('change',save);
+  el('applyall').addEventListener('click',function(){
+    var pad=parseFloat(el('f-pad').value), fs=parseInt(el('f-fs').value,10);
+    fsD=fs;
+    cards.forEach(function(c){ c.pad=pad; c.fs=fs; });
+    save(); render();
+  });
+
+  el('f-shop').addEventListener('input',function(){shop=this.value;save();render()});
+  el('f-cut').addEventListener('change',function(){cut=this.value==='1';save();render()});
+  el('print').addEventListener('click',function(){ sel=null; render(); setTimeout(function(){window.print()},60); });
+
+  stage.addEventListener('pointerdown',function(e){
+    var card=e.target.closest('.card'); if(!card) return;
+    var id=+card.dataset.id, c=byId(id); if(!c) return;
+    var resizing=e.target.classList.contains('grip') && !T(c).lock;
+    if(sel!==id){ sel=id; render(); card=stage.querySelector('.card[data-id="'+id+'"]'); }
+    var page=card.parentNode;
+
+    var sx=e.clientX, sy=e.clientY, ox=c.x, oy=c.y, ow=c.w, oh=c.h, moved=false;
+    page.setPointerCapture && page.setPointerCapture(e.pointerId);
+
+    function move(ev){
+      var dx=(ev.clientX-sx)/k/pxmm, dy=(ev.clientY-sy)/k/pxmm;
+      if(Math.abs(dx)>.5||Math.abs(dy)>.5) moved=true;
+      if(resizing){
+        c.w=clamp(Math.round(ow+dx),MINW,W-M-c.x);
+        c.h=clamp(Math.round(oh+dy),MINH,H-M-c.y);
+        card.style.width=c.w+'mm'; card.style.height=c.h+'mm';
+        fitCard(card,c);
+      }else{
+        c.x=clamp(Math.round(ox+dx),M,W-M-c.w);
+        c.y=clamp(Math.round(oy+dy),M,H-M-c.h);
+        card.style.left=c.x+'mm'; card.style.top=c.y+'mm';
+      }
+      ev.preventDefault();
+    }
+    function up(){
+      page.removeEventListener('pointermove',move);
+      page.removeEventListener('pointerup',up);
+      page.removeEventListener('pointercancel',up);
+      if(moved) save();
+    }
+    page.addEventListener('pointermove',move);
+    page.addEventListener('pointerup',up);
+    page.addEventListener('pointercancel',up);
+    e.preventDefault();
+  });
+
+  sizeButtons(); measure(); load(); render();
+  window.addEventListener('resize',function(){ measure(); fit(); });
+})();
+</script>
+</body>
+</html>
