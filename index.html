@@ -2,515 +2,750 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>價格卡排版</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥬</text></svg>">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>價格卡排版 · 258民生雜糧行</title>
 <style>
   :root{
-    --bg:#f3f1ec; --ink:#16130f; --muted:#6f675c; --line:#ded7cb;
-    --field:#ffffff; --leaf:#2f6b3a; --price:#c8102e;
+    --ink:#14231a;
+    --green:#2e7d32;
+    --green-dk:#1b5e20;
+    --red:#d32f2f;
+    --line:#d7ded8;
+    --bg:#eef1ec;
+    --panel:#fff;
   }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#141310; --ink:#f2efe8; --muted:#a49b8d; --line:#3a362f; --field:#211f1a;
-    }
-  }
-  :root[data-theme="dark"]{--bg:#141310;--ink:#f2efe8;--muted:#a49b8d;--line:#3a362f;--field:#211f1a}
-
   *{box-sizing:border-box}
-  html,body{margin:0}
+  html,body{margin:0;padding:0}
+  html{background:var(--bg);color-scheme:light;overflow-x:hidden}
+  #panel{background:var(--bg);color:var(--ink)}
   body{
-    background:var(--bg); color:var(--ink);
-    font-family:system-ui,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
-    font-size:16px; line-height:1.5; -webkit-text-size-adjust:100%;
-  }
-  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 60px}
-  h1{font-size:21px;font-weight:800;margin:0 0 2px}
-  .sub{color:var(--muted);font-size:14px;margin:0 0 18px}
-
-  label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
-  input,select{
-    width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:8px;
-    background:var(--field);color:var(--ink);font:inherit;font-size:16px;
-  }
-  input:focus,select:focus{outline:2px solid var(--leaf);outline-offset:1px}
-  .row{display:flex;gap:9px;margin-bottom:10px}
-  .row>div{flex:1;min-width:0}
-  .row .narrow{flex:0 0 100px}
-  input[type=range]{padding:0;border:none;background:transparent;accent-color:var(--leaf);height:26px}
-  .tune{display:flex;gap:9px;margin-bottom:8px}
-  .tune>div{flex:1;min-width:0}
-  .tune label{display:flex;justify-content:space-between}
-  .tune b{font-weight:700;color:var(--ink)}
-  .check{display:flex;align-items:center;gap:8px;margin:4px 0 12px;font-size:14px}
-  .check input{width:auto}
-
-  .sizes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
-  .sizes button{
-    background:transparent;border:1px solid var(--line);color:var(--ink);
-    padding:8px 4px;font-size:14px;line-height:1.25;font-weight:700;
-  }
-  .sizes button small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
-  .sizes button[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:#fff}
-  .sizes button[aria-pressed="true"] small{color:rgba(255,255,255,.85)}
-  @media (max-width:520px){.sizes{grid-template-columns:repeat(2,1fr)}}
-
-  button{font:inherit;font-weight:700;border-radius:8px;border:1px solid transparent;padding:11px 14px;cursor:pointer}
-  button:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
-  .primary{background:var(--leaf);color:#fff;flex:1}
-  .ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-  .danger{background:transparent;color:var(--price);border-color:var(--line)}
-  .btns{display:flex;gap:9px}
-
-  .panel{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--field)}
-  .panel h2{font-size:14px;font-weight:700;margin:0 0 12px;color:var(--muted)}
-
-  .tools{display:flex;gap:9px;align-items:center;margin:22px 0 10px;flex-wrap:wrap}
-  .tools .hint{color:var(--muted);font-size:13px;flex:1;min-width:140px}
-
-  .stage{overflow:hidden}
-  .sheet{position:relative;margin-bottom:14px}
-  .sheet-label{font-size:12px;color:var(--muted);margin:0 0 4px}
-  .page{
-    width:210mm;height:297mm;background:#fff;position:absolute;left:0;top:0;
-    transform-origin:top left;box-shadow:0 2px 14px rgba(0,0,0,.16);overflow:hidden;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",sans-serif;
+    -webkit-text-size-adjust:100%;
+    overscroll-behavior:none;
+    overflow-x:hidden;
   }
 
+  /* ---------- 舞台 ---------- */
+  #stageWrap{
+    position:sticky;top:0;z-index:5;
+    padding:8px 0 6px;background:var(--bg);
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+    touch-action:none;
+  }
+  #stageBox{position:relative;margin:0 auto;overflow:hidden}
+  #stage{transform-origin:top left;width:210mm;height:297mm}
+  body.folded #stageBox{display:none}
+  #foldBar{display:flex;justify-content:center;align-items:center;gap:10px;padding:4px 0 0}
+  #splitter{
+    width:120px;height:22px;display:flex;align-items:center;justify-content:center;
+    cursor:ns-resize;touch-action:none;border-radius:20px;background:#dfe5e0;
+  }
+  #splitter::before{content:"";width:52px;height:4px;border-radius:3px;background:#9aa89e}
+  #dirty{
+    display:none;margin-top:10px;padding:9px 11px;border-radius:8px;
+    background:#fff4e0;border:1px solid #f0c27a;color:#8a5a00;font-size:13px;font-weight:700;
+  }
+  #dirty.show{display:block}
+  #b-update.hot{background:#e07b00;border-color:#e07b00;color:#fff}
+  .sub{font-weight:400;font-size:11px;color:#6d7a72}
+  .btns button.on{background:var(--green);border-color:var(--green);color:#fff}
+  .btns button.on .sub{color:rgba(255,255,255,.85)}
+  #b-fold{font-size:12px;padding:5px 14px;border-radius:20px;color:#4a5a50}
+  #page{
+    position:relative;width:210mm;height:297mm;background:#fff;
+    box-shadow:0 2px 10px rgba(0,0,0,.18);
+  }
+  #safe{
+    position:absolute;left:3mm;top:3mm;width:204mm;height:291mm;
+    border:0.4mm dashed #7cc48a;pointer-events:none;
+  }
+
+  /* ---------- 卡片 ---------- */
   .card{
-    position:absolute;background:#fff;color:#16130f;overflow:hidden;
-    padding:var(--pad);padding-bottom:calc(var(--pad) + var(--keep,0mm));
-    display:flex;flex-direction:column;
-    outline:.2mm dashed #c4c4c4;touch-action:none;user-select:none;
+    position:absolute;background:#fff;color:#111;overflow:hidden;
+    transform-origin:center center;
+    display:flex;flex-direction:column;justify-content:space-between;
+    touch-action:none;cursor:move;
   }
-  .card.sale{background:#c8102e;color:#fff}
-  .card.sel{outline:2px solid #2f6b3a;outline-offset:0;z-index:2}
-  .grip{
-    position:absolute;right:0;bottom:0;width:7mm;height:7mm;
-    background:#2f6b3a;border-radius:7mm 0 0 0;touch-action:none;display:none;z-index:3;
+  .card.crop{outline:0.3mm dashed #9aa39c;outline-offset:-0.15mm}
+  .card.sale{background:#fff;color:#111}
+  .card .badge{
+    position:absolute;top:2mm;right:2mm;z-index:3;
+    color:var(--red);font-weight:900;line-height:1.05;white-space:nowrap;
+    display:flex;align-items:center;justify-content:center;
   }
-  .card.sel .grip{display:block}
-  .keep{
-    position:absolute;left:0;right:0;bottom:0;height:var(--keep);
-    background:repeating-linear-gradient(135deg,rgba(0,0,0,.05) 0 2mm,transparent 2mm 4mm);
-    border-top:.2mm dashed #bbb;color:#999;font-size:2.6mm;
-    display:flex;align-items:center;justify-content:center;pointer-events:none;
-  }
+  .card .badge .bt{position:relative;z-index:2}
+  .card .badge svg{position:absolute;left:0;top:0;width:100%;height:100%;z-index:1}
 
-  .c-head{min-width:0}
-  .c-name{font-size:calc(var(--u)*4.4);font-weight:900;line-height:1.08;letter-spacing:-.01em;word-break:break-word}
-  .c-note{font-size:calc(var(--u)*1.6);color:#6f675c;margin-top:calc(var(--u)*.6);line-height:1.3}
-  .sale .c-note{color:rgba(255,255,255,.85)}
-  .c-mid{margin-top:auto;display:flex;align-items:baseline;gap:calc(var(--u)*.5);white-space:nowrap}
-  .c-cur{font-size:calc(var(--u)*2.4);font-weight:800;color:#c8102e}
-  .c-price{font-size:calc(var(--u)*8);font-weight:900;line-height:.86;color:#c8102e;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
-  .c-unit{font-size:calc(var(--u)*2.2);font-weight:700}
-  .sale .c-cur,.sale .c-price{color:#fff}
-  .c-foot{margin-top:calc(var(--u)*1);padding-top:calc(var(--u)*.6);border-top:calc(var(--u)*.4) solid #2f6b3a;font-size:calc(var(--u)*1.5);font-weight:700;white-space:nowrap;overflow:hidden}
-  .sale .c-foot{border-top-color:#fff}
+  .badge.b-tag{background:#ffd60a;border:0.6mm solid var(--red);border-radius:1.5mm;
+    padding:1.2mm 3mm;transform:rotate(7deg);box-shadow:0 0.6mm 0 rgba(0,0,0,.12)}
+  .badge.b-burst{padding:4.5mm 6mm;transform:rotate(-6deg)}
+  .badge.b-cloud{padding:4mm 6mm}
+  .badge.b-stamp{background:#ffd60a;border:0.7mm solid var(--red);border-radius:50%;
+    aspect-ratio:1;padding:3mm;transform:rotate(-12deg);
+    box-shadow:0 0 0 0.5mm #ffd60a,0 0 0 1mm var(--red)}
+  .badge.b-double{flex-direction:column;gap:0.4mm;background:#ffd60a;
+    padding:1.4mm 3mm 0.6mm;border-bottom:2.2mm solid var(--red);transform:rotate(-3deg)}
+  .badge.b-ribbon{top:8mm;right:-16mm;width:60mm;padding:1.6mm 0;border-radius:0;
+    background:#ffd60a;border-top:0.5mm solid var(--red);border-bottom:0.5mm solid var(--red);
+    transform:rotate(45deg);letter-spacing:.15em}
+  .card .nm{font-weight:900;line-height:1.08;letter-spacing:-0.02em;word-break:break-all}
+  .card .pr{display:flex;align-items:baseline;gap:1.5mm;line-height:1;touch-action:none}
+  .card .pr.movable{cursor:move;outline:0.4mm dashed rgba(21,101,192,.55);outline-offset:1.2mm}
+  .card .num{font-weight:900;color:var(--red);letter-spacing:-0.03em}
+  .card .un{font-weight:700;opacity:.85}
+  .card .sp{opacity:.72;line-height:1.3;word-break:break-all}
+  .card .bar{background:var(--green);width:100%}
+  .card .shop{font-weight:700;color:var(--green-dk);letter-spacing:.04em}
+  .card.lay-h{flex-direction:row;align-items:center;gap:2mm}
+  .card.lay-h .left{flex:1 1 auto;min-width:0;height:100%;display:flex;
+    flex-direction:column;justify-content:center;gap:1.2mm}
+  .card.lay-h .left .ft{margin-top:auto}
+  .card.lay-h .rightcol{flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end}
+  .card .mid{display:flex;flex-direction:column;gap:2mm;justify-content:center;flex:1}
+  .card .ft{display:flex;flex-direction:column;gap:1.2mm}
 
-  /* 橫條卡：冰箱內-小 / 冰箱內-大 / 常溫卡-小 */
-  .card.strip{
-    display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:minmax(0,1fr) auto;
-    column-gap:calc(var(--u)*1.2);border-left:calc(var(--u)*.7) solid #2f6b3a;
+  .sel{box-shadow:0 0 0 0.7mm var(--green) inset}
+  .hdl{position:absolute;touch-action:none}
+  .h-res{right:0;bottom:0;background:var(--green);
+    clip-path:polygon(100% 0,100% 100%,0 100%);cursor:nwse-resize}
+  .h-rot{right:0;top:0;background:#1565c0;border-radius:0 0 0 100%;cursor:grab}
+
+  /* ---------- 控制面板 ---------- */
+  #panel{padding:12px 14px 40px;max-width:560px;margin:0 auto}
+  h2{font-size:15px;margin:18px 0 8px;font-weight:700;color:var(--green-dk)}
+  h2:first-child{margin-top:4px}
+  label{display:block;font-size:13px;margin:0 0 3px;color:#4a5a50}
+  select{width:100%;padding:10px 11px;font-size:16px;border:1px solid var(--line);
+    border-radius:8px;background:#fff;font-family:inherit;color:var(--ink)}
+  input[type=text],input[type=number]{
+    width:100%;padding:10px 11px;font-size:16px;border:1px solid var(--line);
+    border-radius:8px;background:#fff;font-family:inherit;
   }
-  .card.strip.sale{border-left-color:#fff}
-  .strip .c-head{grid-column:1;grid-row:1;align-self:center;overflow:hidden}
-  .strip .c-name{font-size:calc(var(--u)*3.2);line-height:1.1;white-space:nowrap;word-break:normal}
-  .strip .c-note{font-size:calc(var(--u)*1.2);margin-top:calc(var(--u)*.3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .strip .c-mid{grid-column:2;grid-row:1/3;margin:0;align-self:center;gap:calc(var(--u)*.3)}
-  .strip .c-cur{font-size:calc(var(--u)*2)}
-  .strip .c-price{font-size:calc(var(--u)*5.6)}
-  .strip .c-unit{font-size:calc(var(--u)*1.8)}
-  .strip .c-foot{grid-column:1;grid-row:2;margin:0;padding:0;border:none;font-size:calc(var(--u)*1.1);color:#2f6b3a}
-  .strip.sale .c-foot{color:#fff}
-
-  .safe{position:absolute;left:3mm;top:3mm;right:3mm;bottom:3mm;border:1px dashed #9ec4a6;pointer-events:none}
-  .empty-note{
-    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    color:#a9a296;font-size:5mm;pointer-events:none;
+  input:focus{outline:2px solid var(--green);outline-offset:-1px}
+  .row{display:flex;gap:8px}
+  .row>div{flex:1}
+  .fld{margin-bottom:10px}
+  .chk{display:flex;align-items:center;gap:8px;font-size:14px;margin:8px 0}
+  .chk input{width:20px;height:20px;accent-color:var(--green)}
+  input[type=range]{width:100%;accent-color:var(--green);height:28px}
+  .sl{display:flex;align-items:center;gap:10px}
+  .sl .v{min-width:62px;text-align:right;font-size:13px;font-variant-numeric:tabular-nums;color:#4a5a50}
+  .sl button{flex:0 0 auto}
+  button{
+    font-family:inherit;font-size:14px;font-weight:700;padding:11px 12px;
+    border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);
   }
+  button:active{transform:translateY(1px)}
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .b-main{background:var(--green);border-color:var(--green);color:#fff}
+  .b-warn{background:#fff;border-color:#e0a5a5;color:#b33}
+  .b-print{background:var(--ink);border-color:var(--ink);color:#fff;grid-column:1/-1}
+  .tiny{font-size:12px;color:#6d7a72;margin:6px 0 0}
+  #tip{font-size:12px;color:#6d7a72;text-align:center;padding:6px 10px 0}
 
-  @page{size:A4;margin:0}
   @media print{
+    .no-print{display:none!important}
+    .sel{box-shadow:none!important}
+    .card .pr.movable{outline:none!important}
     body{background:#fff}
-    .noprint{display:none!important}
-    .wrap{max-width:none;padding:0;margin:0}
-    .stage{overflow:visible;height:auto!important}
-    .sheet{width:210mm!important;height:297mm!important;margin:0;break-after:page;page-break-after:always}
-    .sheet:last-child{break-after:auto;page-break-after:auto}
-    .page{transform:none!important;box-shadow:none;position:relative}
-    .card{outline:none}
-    .card.cut{outline:.2mm dashed #cfcfcf}
-    .card.sel{outline:none}
-    .card.sel.cut{outline:.2mm dashed #cfcfcf}
-    .grip,.empty-note,.keep{display:none!important}
-    .card.sale,.card.strip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #stageWrap{position:static;padding:0;border:0;display:block;overflow:visible;height:auto!important}
+    #stageBox{width:auto!important;height:auto!important;margin:0;overflow:visible;display:block!important}
+    #stage{transform:none!important;width:210mm;height:297mm}
+    #page{box-shadow:none;width:210mm;height:297mm}
+    @page{size:A4;margin:0}
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="noprint">
-    <h1>價格卡排版</h1>
-    <p class="sub">選尺寸、填內容、加入。卡片在 A4 上可拖動，排不下會自動開新頁。</p>
 
-    <div class="panel">
-      <h2 id="mode">新增卡片</h2>
-      <label>卡片尺寸</label>
-      <div class="sizes" id="sizes"></div>
-      <div class="row">
-        <div><label for="f-name">品名</label><input id="f-name" placeholder="高麗菜" autocomplete="off"></div>
-      </div>
-      <div class="row">
-        <div><label for="f-price">價格</label><input id="f-price" inputmode="decimal" placeholder="45" autocomplete="off"></div>
-        <div class="narrow"><label for="f-unit">單位</label><input id="f-unit" placeholder="／斤" autocomplete="off"></div>
-      </div>
-      <div class="row">
-        <div><label for="f-note">產地／規格</label><input id="f-note" placeholder="雲林西螺・約1.2kg" autocomplete="off"></div>
-      </div>
-      <div class="check"><input type="checkbox" id="f-sale"><label for="f-sale" style="margin:0;color:inherit">紅底特價卡</label></div>
-      <div class="tune">
-        <div><label for="f-pad">格內留白 <b id="v-pad">4mm</b></label><input type="range" id="f-pad" min="0" max="16" step="0.5" value="4"></div>
-        <div><label for="f-fs">字體大小 <b id="v-fs">100%</b></label><input type="range" id="f-fs" min="50" max="180" step="5" value="100"></div>
-      </div>
-      <button class="ghost" id="applyall" style="width:100%;margin-bottom:12px">這兩項套用到全部卡片</button>
-      <div class="btns">
-        <button class="primary" id="submit">加入卡片</button>
-        <button class="ghost" id="dup" hidden>複製</button>
-        <button class="danger" id="del" hidden>刪除</button>
-        <button class="ghost" id="cancel" hidden>取消選取</button>
-      </div>
-    </div>
-
-    <div class="tools">
-      <span class="hint" id="hint">先加一張卡片。</span>
-      <button class="ghost" id="tidy">自動排整齊</button>
-      <button class="primary" id="print" style="flex:0 0 auto">列印</button>
-    </div>
-    <div class="row">
-      <div><label for="f-shop">卡片下方店名</label><input id="f-shop" value="258民生雜糧行"></div>
-      <div class="narrow" style="flex:0 0 130px">
-        <label for="f-cut">裁切虛線</label>
-        <select id="f-cut"><option value="1">印出來</option><option value="0">不印</option></select>
+<div id="stageWrap">
+  <div id="stageBox">
+    <div id="stage">
+      <div id="page">
+        <div id="safe" class="no-print"></div>
       </div>
     </div>
   </div>
+  <div id="foldBar" class="no-print">
+    <button id="b-fold">收合預覽</button>
+    <div id="splitter" title="上下拖曳可調整預覽區高度"></div>
+  </div>
+</div>
+<p id="tip" class="no-print">點卡片可編輯／拖曳移動／綠角拉大小／藍點旋轉</p>
 
-  <div class="stage" id="stage"></div>
+<div id="panel" class="no-print">
+
+  <h2>卡片內容</h2>
+  <div class="fld"><label for="f-name">品名</label><input id="f-name" type="text" placeholder="例：高麗菜"></div>
+  <div class="row">
+    <div class="fld"><label for="f-price">價格</label><input id="f-price" type="text" inputmode="decimal" placeholder="45"></div>
+    <div class="fld"><label for="f-unit">單位</label><input id="f-unit" type="text" placeholder="/顆"></div>
+  </div>
+  <div class="fld"><label for="f-spec">產地規格</label><input id="f-spec" type="text" placeholder="雲林 · 產地直送 1.2kg↑"></div>
+  <label style="margin-top:2px">排列方式</label>
+  <div class="btns" style="grid-template-columns:1fr 1fr 1fr;margin-top:0;margin-bottom:8px">
+    <button id="b-lay-v">直式<br><span class="sub">品名在上</span></button>
+    <button id="b-lay-h">橫式<br><span class="sub">名左 價右</span></button>
+    <button id="b-lay-all">套用全部</button>
+  </div>
+  <label class="chk"><input id="f-shopon" type="checkbox" checked>卡片下方顯示店名與綠線</label>
+  <label class="chk"><input id="f-sale" type="checkbox">右上角特價標籤（黃底紅字）</label>
+  <div class="row">
+    <div class="fld"><label for="f-badge">標籤文字</label><input id="f-badge" type="text" placeholder="特價" value="特價"></div>
+    <div class="fld"><label for="f-bstyle">標籤樣式</label>
+      <select id="f-bstyle">
+        <option value="tag">方框吊牌</option>
+        <option value="burst">爆炸星</option>
+        <option value="cloud">雲朵</option>
+        <option value="double">兩行＋大底線</option>
+        <option value="stamp">圓形印章</option>
+        <option value="ribbon">角落斜帶</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="dirty">欄位已修改，按下方「更新」才會套用到卡片</div>
+
+  <div class="btns" style="margin-top:4px">
+    <button id="b-shopon-all">店名全部顯示</button>
+    <button id="b-shopoff-all">店名全部隱藏</button>
+  </div>
+
+  <div class="btns">
+    <button class="b-main" id="b-add">加入</button>
+    <button class="b-main" id="b-update">更新</button>
+    <button id="b-copy">複製</button>
+    <button class="b-warn" id="b-del">刪除</button>
+    <button id="b-deselect">取消選取</button>
+    <button id="b-auto">自動排整齊</button>
+    <button class="b-print" id="b-print">列印</button>
+  </div>
+
+  <h2>版面微調</h2>
+  <div class="row">
+    <div class="fld"><label for="f-w">寬（mm）</label><input id="f-w" type="number" inputmode="decimal" step="0.5" min="25" max="204"></div>
+    <div class="fld"><label for="f-h">高（mm）</label><input id="f-h" type="number" inputmode="decimal" step="0.5" min="25" max="291"></div>
+  </div>
+  <label style="margin-top:2px">分割版型（同時套用到「自動排整齊」）</label>
+  <div class="btns" style="grid-template-columns:1fr 1fr 1fr;margin-top:0">
+    <button id="b-g44">16 等分<br><span class="sub">4×4</span></button>
+    <button id="b-g34">12 等分<br><span class="sub">直 3×4</span></button>
+    <button id="b-g43">12 等分<br><span class="sub">橫 4×3</span></button>
+  </div>
+  <label style="margin-top:8px">實體卡規格</label>
+  <div class="btns" style="grid-template-columns:1fr 1fr 1fr;margin-top:0">
+    <button id="b-s1">冰箱小<br><span class="sub">80×30 · 18張</span></button>
+    <button id="b-s2">冰箱大<br><span class="sub">160×40 · 7張</span></button>
+    <button id="b-s3">常溫小<br><span class="sub">150×60 · 4張</span></button>
+  </div>
+  <label for="s-pad" style="margin-top:12px">格內留白 <span id="v-pad">8.0 mm</span></label>
+  <div class="sl">
+    <input id="s-pad" type="range" min="0" max="16" step="0.5" value="8">
+    <button id="b-pad-all">套用全部</button>
+  </div>
+  <label for="s-fs" style="margin-top:10px">品項字體大小（整張卡） <span id="v-fs">100%</span></label>
+  <div class="sl">
+    <input id="s-fs" type="range" min="50" max="180" step="5" value="100">
+    <button id="b-fs-all">套用全部</button>
+  </div>
+  <label for="s-rot" style="margin-top:10px">旋轉角度 <span id="v-rot">0°</span></label>
+  <div class="sl">
+    <input id="s-rot" type="range" min="-180" max="180" step="1" value="0">
+    <button id="b-rot0">歸零</button>
+  </div>
+  <p class="tiny">拉桿只調整選取中的那張卡，拉了立刻生效；「套用全部」會套到所有卡片。品名／價格／單位／產地規格這四欄改完，要按「更新」才會套用。</p>
+
+  <h2>價格數字</h2>
+  <label for="s-pfs">價格文字大小 <span id="v-pfs">100%</span></label>
+  <div class="sl">
+    <input id="s-pfs" type="range" min="40" max="260" step="5" value="100">
+    <button id="b-pfs-all">套用全部</button>
+  </div>
+  <label for="s-px" style="margin-top:10px">左右位移 <span id="v-px">0 mm</span></label>
+  <input id="s-px" type="range" min="-80" max="80" step="1" value="0">
+  <label for="s-py" style="margin-top:6px">上下位移 <span id="v-py">0 mm</span></label>
+  <div class="sl">
+    <input id="s-py" type="range" min="-120" max="120" step="1" value="0">
+    <button id="b-p-reset">歸位</button>
+  </div>
+  <p class="tiny">卡片選取後，價格數字外圍會出現藍色虛線框，可直接用手指拖到想要的位置。</p>
+
+  <h2>整體設定</h2>
+  <div class="fld"><label for="f-shop">卡片下方店名</label><input id="f-shop" type="text" value="258民生雜糧行"></div>
+  <label class="chk"><input id="f-crop" type="checkbox" checked>列印裁切虛線</label>
+  <p class="tiny">淡綠虛線是 3mm 安全邊，只在螢幕顯示，不會印出。資料自動存在這台裝置。</p>
 </div>
 
 <script>
 (function(){
-  var KEY='pricecards.a4.v1';
-  var W=210, H=297, M=3, MINW=40, MINH=28;
-  /* 尺寸：寬 w × 高 h（mm）；keep = 底部留白 */
-  var TYPES={
-    rs:{name:'常溫卡-小', dim:'6×15cm・留底2cm', w:150, h:60,  keep:20, strip:true,  lock:false, pad:3},
-    fs:{name:'冰箱內-小', dim:'3×8cm・固定',     w:80,  h:30,  keep:0,  strip:true,  lock:true,  pad:2},
-    fl:{name:'冰箱內-大', dim:'4×16cm',          w:160, h:40,  keep:0,  strip:true,  lock:false, pad:3},
-    a4:{name:'A4 四格',   dim:'10.2×14.55cm',    w:102, h:145.5,keep:0, strip:false, lock:false, pad:4}
-  };
-  var ORDER=['rs','fs','fl','a4'];
-  var cards=[], shop='258民生雜糧行', cut=true, sel=null, seq=1, curT='rs';
-  var fsD=100;
-  var pxmm=1, k=1;
+  "use strict";
 
-  function el(id){return document.getElementById(id)}
-  var stage=el('stage');
+  /* ===== 單位換算 ===== */
+  var probe=document.createElement('div');
+  probe.style.cssText='position:absolute;width:100mm;height:0;visibility:hidden';
+  document.body.appendChild(probe);
+  var PXMM=probe.getBoundingClientRect().width/100;
+  document.body.removeChild(probe);
 
-  function esc(s){return String(s).replace(/[&<>"]/g,function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  function clamp(v,a,b){return v<a?a:(v>b?b:v)}
-  function T(c){return TYPES[c.t]||TYPES.a4}
-  function byId(id){return cards.filter(function(c){return c.id===id})[0]}
+  var PW=210, PH=297, M=3;                 // A4 與安全邊 (mm)
+  var AX=M, AY=M, AW=PW-M*2, AH=PH-M*2;    // 可印區
+  var DEF_W=AW/2, DEF_H=AH/2;              // 102 × 145.5
+  var KEY='pricecards258.v1';
 
-  function measure(){
-    var p=document.createElement('div');
-    p.style.cssText='position:absolute;visibility:hidden;width:100mm';
-    document.body.appendChild(p);
-    pxmm=p.getBoundingClientRect().width/100;
-    document.body.removeChild(p);
-  }
-  function fit(){
-    k=Math.min(1, stage.clientWidth/(W*pxmm));
-    Array.prototype.forEach.call(stage.querySelectorAll('.sheet'),function(s){
-      s.style.width=(W*pxmm*k)+'px'; s.style.height=(H*pxmm*k)+'px';
-      s.querySelector('.page').style.transform='scale('+k+')';
-    });
-  }
+  var page=document.getElementById('page'),
+      stage=document.getElementById('stage'),
+      box=document.getElementById('stageBox'),
+      wrap=document.getElementById('stageWrap');
 
-  /* ---- 擺放 ---- */
-  function overlaps(list,p,x,y,w,h,skip){
-    return list.some(function(c){
-      return c!==skip && c.p===p && x<c.x+c.w-.01 && x+w>c.x+.01 && y<c.y+c.h-.01 && y+h>c.y+.01;
-    });
-  }
-  function inside(x,y,w,h){return x>=M-.01 && y>=M-.01 && x+w<=W-M+.01 && y+h<=H-M+.01}
-  function findSlot(list,w,h,skip){
-    var n=0; list.forEach(function(c){ if(c!==skip) n=Math.max(n,c.p+1); });
-    for(var p=0;p<n;p++){
-      var xs=[M], ys=[M];
-      list.forEach(function(c){ if(c.p===p && c!==skip){ xs.push(c.x+c.w); ys.push(c.y+c.h); } });
-      xs.sort(function(a,b){return a-b}); ys.sort(function(a,b){return a-b});
-      for(var i=0;i<ys.length;i++) for(var j=0;j<xs.length;j++){
-        if(inside(xs[j],ys[i],w,h) && !overlaps(list,p,xs[j],ys[i],w,h,skip)) return {p:p,x:xs[j],y:ys[i]};
-      }
-    }
-    return {p:n,x:M,y:M};
-  }
-  function compact(){
-    var used=[]; cards.forEach(function(c){ if(used.indexOf(c.p)<0) used.push(c.p); });
-    used.sort(function(a,b){return a-b});
-    cards.forEach(function(c){ c.p=used.indexOf(c.p); });
-  }
+  var state={cards:[],shop:'258民生雜糧行',crop:true,seq:1,cell:{w:0,h:0},ph:0,layout:'v'};
+  var selId=null, scale=1;
 
+  /* ===== 儲存 ===== */
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch(e){ /* 無痕模式或預覽環境不支援，忽略 */ }
+  }
   function load(){
     try{
-      var d=JSON.parse(localStorage.getItem(KEY)||'null');
-      if(d){
-        if(Array.isArray(d.cards)) cards=d.cards;
-        if(d.shop) shop=d.shop;
-        if(typeof d.cut==='boolean') cut=d.cut;
-        if(typeof d.fsD==='number') fsD=d.fsD;
-        if(d.curT && TYPES[d.curT]) curT=d.curT;
-        cards.forEach(function(c){
-          if(c.id>=seq) seq=c.id+1;
-          if(!TYPES[c.t]) c.t='a4';
-          if(typeof c.p!=='number') c.p=0;
-          if(T(c).lock){ c.w=T(c).w; c.h=T(c).h; }
-          c.w=Math.min(c.w,W-2*M); c.h=Math.min(c.h,H-2*M);
-          c.x=clamp(c.x,M,W-M-c.w); c.y=clamp(c.y,M,H-M-c.h);
-        });
-        compact();
+      var raw=localStorage.getItem(KEY);
+      if(!raw) return;
+      var o=JSON.parse(raw);
+      if(o&&Array.isArray(o.cards)){
+        state.cards=o.cards;
+        state.shop=o.shop||state.shop;
+        state.crop=(o.crop!==false);
+        state.seq=o.seq||(state.cards.length+1);
+        if(o.cell&&o.cell.w) state.cell=o.cell;
+        else if(o.grid&&o.grid.c) state.cell={w:AW/o.grid.c,h:AH/o.grid.r};
+        state.ph=o.ph||0;
+        state.layout=o.layout||'v';
       }
     }catch(e){}
-    el('f-shop').value=shop;
-    el('f-cut').value=cut?'1':'0';
-    setTune(TYPES[curT].pad,fsD);
-  }
-  function save(){
-    try{localStorage.setItem(KEY,JSON.stringify({cards:cards,shop:shop,cut:cut,fsD:fsD,curT:curT}));}catch(e){}
   }
 
-  /* ---- 字體單位與自動縮字 ---- */
-  function baseU(c){
-    var t=T(c), fs=(c.fs==null?100:c.fs)/100;
-    return t.strip ? (c.h-t.keep)/12*fs : c.w/33*fs;
+  /* ===== 工具 ===== */
+  function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+  function bbox(c){
+    var r=(c.rot||0)*Math.PI/180, co=Math.abs(Math.cos(r)), si=Math.abs(Math.sin(r));
+    return { w:c.w*co+c.h*si, h:c.w*si+c.h*co };
   }
-  function fitCard(node,c){
-    var u=baseU(c), f=1;
-    var head=node.querySelector('.c-head');
-    node.style.setProperty('--u',u+'mm');
-    for(var i=0;i<14;i++){
-      var over=T(c).strip
-        ? (head.scrollWidth>head.clientWidth+1 || head.scrollHeight>head.clientHeight+1)
-        : (node.scrollHeight>node.clientHeight+1 || node.scrollWidth>node.clientWidth+1);
-      if(!over) break;
-      f-=.06; node.style.setProperty('--u',(u*f)+'mm');
-    }
+  function fitInSafe(c){
+    c.w=clamp(c.w,25,AW); c.h=clamp(c.h,25,AH);
+    var b=bbox(c), cx=c.x+c.w/2, cy=c.y+c.h/2;
+    cx = b.w>=AW ? AX+AW/2 : clamp(cx, AX+b.w/2, AX+AW-b.w/2);
+    cy = b.h>=AH ? AY+AH/2 : clamp(cy, AY+b.h/2, AY+AH-b.h/2);
+    c.x=cx-c.w/2; c.y=cy-c.h/2;
+  }
+  function cellSize(){
+    var c=state.cell;
+    return (c&&c.w&&c.h)?{w:c.w,h:c.h}:{w:DEF_W,h:DEF_H};
+  }
+  function gridOf(){
+    var z=cellSize();
+    return { c:Math.max(1,Math.floor(AW/z.w+1e-6)), r:Math.max(1,Math.floor(AH/z.h+1e-6)), w:z.w, h:z.h };
+  }
+  function byId(id){ for(var i=0;i<state.cards.length;i++) if(state.cards[i].id===id) return state.cards[i]; return null; }
+  function sel(){ return selId?byId(selId):null; }
+
+  /* ===== 舞台縮放 ===== */
+  function fit(){
+    var availW=Math.min(document.documentElement.clientWidth-20, 540);
+    var maxH=window.innerHeight*0.92;
+    var availH=state.ph ? Math.min(Math.max(state.ph,140), maxH) : Math.max(240, window.innerHeight*0.50);
+    scale=Math.min(availW/(PW*PXMM), availH/(PH*PXMM));
+    stage.style.transform='scale('+scale+')';
+    box.style.width=Math.round(PW*PXMM*scale)+'px';
+    box.style.height=Math.round(PH*PXMM*scale)+'px';
   }
 
-  function sizeButtons(){
-    el('sizes').innerHTML=ORDER.map(function(key){
-      var t=TYPES[key];
-      return '<button type="button" data-t="'+key+'" aria-pressed="false">'+t.name+'<small>'+t.dim+'</small></button>';
-    }).join('');
-  }
-  function markSize(key){
-    Array.prototype.forEach.call(el('sizes').querySelectorAll('button'),function(b){
-      b.setAttribute('aria-pressed', b.dataset.t===key?'true':'false');
-    });
-  }
-
-  function cardNode(c){
-    var t=T(c), d=document.createElement('div');
-    d.className='card'+(t.strip?' strip':'')+(c.sale?' sale':'')+(cut?' cut':'')+(sel===c.id?' sel':'');
-    d.dataset.id=c.id;
-    d.style.left=c.x+'mm'; d.style.top=c.y+'mm';
-    d.style.width=c.w+'mm'; d.style.height=c.h+'mm';
-    d.style.setProperty('--pad',(c.pad==null?t.pad:c.pad)+'mm');
-    d.style.setProperty('--keep',t.keep+'mm');
-    d.innerHTML=
-      '<div class="c-head"><div class="c-name">'+esc(c.name)+'</div>'+
-      (c.note?'<div class="c-note">'+esc(c.note)+'</div>':'')+'</div>'+
-      '<div class="c-mid"><span class="c-cur">$</span>'+
-      '<span class="c-price">'+esc(c.price)+'</span>'+
-      '<span class="c-unit">'+esc(c.unit||'')+'</span></div>'+
-      '<div class="c-foot">'+esc(shop)+'</div>'+
-      (t.keep?'<div class="keep noprint">留底 '+(t.keep/10)+'cm</div>':'')+
-      (t.lock?'':'<div class="grip"></div>');
-    return d;
-  }
-
-  function render(){
-    stage.innerHTML='';
-    var n=1; cards.forEach(function(c){ n=Math.max(n,c.p+1); });
-    for(var p=0;p<n;p++){
-      var sheet=document.createElement('div'); sheet.className='sheet';
-      var page=document.createElement('div'); page.className='page'; page.dataset.p=p;
-      page.innerHTML='<div class="safe noprint"></div>'+
-        (cards.length?'':'<div class="empty-note noprint">A4 空白頁</div>');
-      sheet.appendChild(page);
-      if(n>1){
-        var lab=document.createElement('p'); lab.className='sheet-label noprint';
-        lab.textContent='第 '+(p+1)+' 頁'; stage.appendChild(lab);
+  /* ===== 特價標籤 ===== */
+  var SVG=(function(){
+    function burst(){
+      var p=[],n=14,cx=50,cy=50;
+      for(var i=0;i<n*2;i++){
+        var a=Math.PI*i/n-Math.PI/2, r=(i%2?32:50);
+        p.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1));
       }
-      stage.appendChild(sheet);
-      cards.forEach(function(c){ if(c.p===p) page.appendChild(cardNode(c)); });
+      return '<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="'+p.join(' ')+
+             '" fill="#ffd60a" stroke="#d32f2f" stroke-width="3.5" stroke-linejoin="round"/></svg>';
     }
-    fit();
-    cards.forEach(function(c){
-      var node=stage.querySelector('.card[data-id="'+c.id+'"]'); if(node) fitCard(node,c);
-    });
-
-    var s=byId(sel);
-    el('mode').textContent=s?('編輯：'+s.name):'新增卡片';
-    el('submit').textContent=s?'更新':'加入卡片';
-    ['dup','del','cancel'].forEach(function(id){el(id).hidden=!s});
-    markSize(s?s.t:curT);
-    el('hint').textContent=cards.length
-      ? (s?(T(s).lock?'拖動移動。這個尺寸固定不能改大小。':'拖動移動，拉右下角綠色角改大小。')
-          :'點一下卡片可編輯。共 '+cards.length+' 張、'+n+' 頁。')
-      : '先加一張卡片。';
-    if(s){
-      el('f-name').value=s.name; el('f-price').value=s.price;
-      el('f-unit').value=s.unit||''; el('f-note').value=s.note||'';
-      el('f-sale').checked=!!s.sale;
-      setTune(s.pad==null?T(s).pad:s.pad, s.fs==null?100:s.fs);
-    }
-  }
-
-  function clearForm(){
-    ['f-name','f-price','f-note'].forEach(function(i){el(i).value=''});
-    el('f-sale').checked=false;
-  }
-
-  el('sizes').addEventListener('click',function(e){
-    var b=e.target.closest('button'); if(!b) return;
-    var key=b.dataset.t, t=TYPES[key], s=byId(sel);
-    if(s){
-      if(s.t===key) return;
-      s.t=key; s.w=t.w; s.h=t.h; s.pad=t.pad;
-      if(!inside(s.x,s.y,s.w,s.h) || overlaps(cards,s.p,s.x,s.y,s.w,s.h,s)){
-        var pos=findSlot(cards,s.w,s.h,s); s.p=pos.p; s.x=pos.x; s.y=pos.y;
+    function cloud(){
+      var n=9,rx=36,ry=30,cx=50,cy=50,bump=17,d='';
+      for(var i=0;i<=n;i++){
+        var a=2*Math.PI*i/n-Math.PI/2;
+        var x=(cx+rx*Math.cos(a)).toFixed(1), y=(cy+ry*Math.sin(a)).toFixed(1);
+        d+= i===0 ? 'M'+x+' '+y : ' A'+bump+' '+bump+' 0 0 1 '+x+' '+y;
       }
-      compact(); save(); render();
+      return '<svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="'+d+'Z'+
+             '" fill="#ffd60a" stroke="#d32f2f" stroke-width="3.5" stroke-linejoin="round"/></svg>';
+    }
+    return { burst:burst(), cloud:cloud() };
+  })();
+
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function makeBadge(c,k){
+    var st=c.bstyle||'tag', t=esc(c.badge||'特價');
+    var b=document.createElement('div');
+    b.className='badge b-'+st;
+    b.style.fontSize=(8*k)+'mm';
+    if(st==='double'){
+      b.innerHTML='<span class="bt">'+t+'</span><span class="bt">'+t+'</span>';
     }else{
-      curT=key; setTune(t.pad,fsD); markSize(key); save();
+      b.innerHTML=(SVG[st]||'')+'<span class="bt">'+t+'</span>';
     }
-  });
-
-  el('submit').addEventListener('click',function(){
-    var name=el('f-name').value.trim(), price=el('f-price').value.trim();
-    if(!name){el('f-name').focus();return}
-    if(!price){el('f-price').focus();return}
-    var data={name:name,price:price,unit:el('f-unit').value.trim(),
-              note:el('f-note').value.trim(),sale:el('f-sale').checked};
-    var s=byId(sel);
-    if(s){ Object.assign(s,data); }
-    else{
-      var t=TYPES[curT], pos=findSlot(cards,t.w,t.h,null);
-      cards.push(Object.assign({id:seq++,t:curT,p:pos.p,x:pos.x,y:pos.y,w:t.w,h:t.h,
-        pad:parseFloat(el('f-pad').value),fs:parseInt(el('f-fs').value,10)},data));
-      clearForm();
-    }
-    save(); render();
-    if(!s) el('f-name').focus();
-  });
-
-  el('del').addEventListener('click',function(){
-    cards=cards.filter(function(c){return c.id!==sel});
-    sel=null; clearForm(); compact(); save(); render();
-  });
-  el('dup').addEventListener('click',function(){
-    var s=byId(sel); if(!s) return;
-    var pos=findSlot(cards,s.w,s.h,null);
-    var n=Object.assign({},s,{id:seq++,p:pos.p,x:pos.x,y:pos.y});
-    cards.push(n); sel=n.id; save(); render();
-  });
-  el('cancel').addEventListener('click',function(){ sel=null; clearForm(); setTune(TYPES[curT].pad,fsD); render(); });
-
-  el('tidy').addEventListener('click',function(){
-    var list=cards.slice().sort(function(a,b){
-      return ORDER.indexOf(a.t)-ORDER.indexOf(b.t) || b.h-a.h || a.id-b.id;
-    });
-    var placed=[];
-    list.forEach(function(c){
-      if(T(c).lock){ c.w=T(c).w; c.h=T(c).h; }
-      var pos=findSlot(placed,c.w,c.h,null);
-      c.p=pos.p; c.x=pos.x; c.y=pos.y; placed.push(c);
-    });
-    save(); render();
-  });
-
-  function setTune(pad,fs){
-    el('f-pad').value=pad; el('v-pad').textContent=pad+'mm';
-    el('f-fs').value=fs;  el('v-fs').textContent=fs+'%';
+    return b;
   }
-  function tuned(){
-    var pad=parseFloat(el('f-pad').value), fs=parseInt(el('f-fs').value,10);
-    el('v-pad').textContent=pad+'mm'; el('v-fs').textContent=fs+'%';
-    var s=byId(sel);
-    if(s){
-      s.pad=pad; s.fs=fs;
-      var n=stage.querySelector('.card[data-id="'+s.id+'"]');
-      if(n){ n.style.setProperty('--pad',pad+'mm'); fitCard(n,s); }
-    }else{ fsD=fs; }
-  }
-  el('f-pad').addEventListener('input',tuned);
-  el('f-fs').addEventListener('input',tuned);
-  el('f-pad').addEventListener('change',save);
-  el('f-fs').addEventListener('change',save);
-  el('applyall').addEventListener('click',function(){
-    var pad=parseFloat(el('f-pad').value), fs=parseInt(el('f-fs').value,10);
-    fsD=fs;
-    cards.forEach(function(c){ c.pad=pad; c.fs=fs; });
-    save(); render();
-  });
 
-  el('f-shop').addEventListener('input',function(){shop=this.value;save();render()});
-  el('f-cut').addEventListener('change',function(){cut=this.value==='1';save();render()});
-  el('print').addEventListener('click',function(){ sel=null; render(); setTimeout(function(){window.print()},60); });
+  /* ===== 繪製 ===== */
+  function render(){
+    var old=page.querySelectorAll('.card');
+    for(var i=0;i<old.length;i++) old[i].remove();
 
-  stage.addEventListener('pointerdown',function(e){
-    var card=e.target.closest('.card'); if(!card) return;
-    var id=+card.dataset.id, c=byId(id); if(!c) return;
-    var resizing=e.target.classList.contains('grip') && !T(c).lock;
-    if(sel!==id){ sel=id; render(); card=stage.querySelector('.card[data-id="'+id+'"]'); }
-    var page=card.parentNode;
+    state.cards.forEach(function(c){
+      var k=(c.fs||100)/100, pad=(c.pad==null?8:c.pad);
+      var el=document.createElement('div');
+      el.className='card'+(c.sale?' sale':'')+(state.crop?' crop':'')+(c.id===selId?' sel':'');
+      el.dataset.id=c.id;
+      el.style.left=c.x+'mm'; el.style.top=c.y+'mm';
+      el.style.width=c.w+'mm'; el.style.height=c.h+'mm';
+      el.style.padding=pad+'mm';
+      el.style.transform='rotate('+(c.rot||0)+'deg)';
 
-    var sx=e.clientX, sy=e.clientY, ox=c.x, oy=c.y, ow=c.w, oh=c.h, moved=false;
-    page.setPointerCapture && page.setPointerCapture(e.pointerId);
+      var nm=document.createElement('div');
+      nm.className='nm'; nm.style.fontSize=(13*k)+'mm'; nm.textContent=c.name||'品名';
 
-    function move(ev){
-      var dx=(ev.clientX-sx)/k/pxmm, dy=(ev.clientY-sy)/k/pxmm;
-      if(Math.abs(dx)>.5||Math.abs(dy)>.5) moved=true;
-      if(resizing){
-        c.w=clamp(Math.round(ow+dx),MINW,W-M-c.x);
-        c.h=clamp(Math.round(oh+dy),MINH,H-M-c.y);
-        card.style.width=c.w+'mm'; card.style.height=c.h+'mm';
-        fitCard(card,c);
+      var mid=document.createElement('div'); mid.className='mid';
+      var pk=k*((c.pfs==null?100:c.pfs)/100);
+      var pr=document.createElement('div'); pr.className='pr';
+      pr.style.transform='translate('+(c.px||0)+'mm,'+(c.py||0)+'mm)';
+      if(c.id===selId){ pr.dataset.act='price'; pr.classList.add('movable'); }
+      var num=document.createElement('span');
+      num.className='num'; num.style.fontSize=(32*pk)+'mm'; num.textContent=(c.price||'0');
+      var un=document.createElement('span');
+      un.className='un'; un.style.fontSize=(7.5*pk)+'mm'; un.textContent=c.unit||'';
+      pr.appendChild(num); pr.appendChild(un);
+      var sp=document.createElement('div');
+      sp.className='sp'; sp.style.fontSize=(5.6*k)+'mm'; sp.textContent=c.spec||'';
+      mid.appendChild(pr); if(c.spec && (c.layout||'v')!=='h') mid.appendChild(sp);
+
+      var ft=document.createElement('div'); ft.className='ft';
+      var bar=document.createElement('div'); bar.className='bar'; bar.style.height=(1.8*k)+'mm';
+      var shop=document.createElement('div');
+      shop.className='shop'; shop.style.fontSize=(5.4*k)+'mm'; shop.textContent=state.shop;
+      ft.appendChild(bar); ft.appendChild(shop);
+
+      if((c.layout||'v')==='h'){
+        el.classList.add('lay-h');
+        var lf=document.createElement('div'); lf.className='left';
+        lf.appendChild(nm); if(c.spec) lf.appendChild(sp);
+        if(c.showShop!==false) lf.appendChild(ft);
+        var rt=document.createElement('div'); rt.className='rightcol';
+        rt.appendChild(pr);
+        el.appendChild(lf); el.appendChild(rt);
       }else{
-        c.x=clamp(Math.round(ox+dx),M,W-M-c.w);
-        c.y=clamp(Math.round(oy+dy),M,H-M-c.h);
-        card.style.left=c.x+'mm'; card.style.top=c.y+'mm';
+        el.appendChild(nm); el.appendChild(mid);
+        if(c.showShop!==false) el.appendChild(ft);
       }
-      ev.preventDefault();
-    }
-    function up(){
-      page.removeEventListener('pointermove',move);
-      page.removeEventListener('pointerup',up);
-      page.removeEventListener('pointercancel',up);
-      if(moved) save();
-    }
-    page.addEventListener('pointermove',move);
-    page.addEventListener('pointerup',up);
-    page.addEventListener('pointercancel',up);
+
+      if(c.sale) el.appendChild(makeBadge(c,k));
+
+      if(c.id===selId){
+        var hs=Math.max(6, 30/(PXMM*scale));   // 螢幕上恆為約 30px 的觸控範圍
+        var hr=document.createElement('div'); hr.className='hdl h-res no-print'; hr.dataset.act='resize';
+        var ht=document.createElement('div'); ht.className='hdl h-rot no-print'; ht.dataset.act='rotate';
+        hr.style.width=ht.style.width=hs+'mm';
+        hr.style.height=ht.style.height=hs+'mm';
+        el.appendChild(hr); el.appendChild(ht);
+      }
+      page.appendChild(el);
+    });
+    save();
+  }
+
+  /* ===== 表單同步 ===== */
+  var F={
+    name:document.getElementById('f-name'), price:document.getElementById('f-price'),
+    unit:document.getElementById('f-unit'), spec:document.getElementById('f-spec'),
+    shopOn:document.getElementById('f-shopon'),
+    sale:document.getElementById('f-sale'), badge:document.getElementById('f-badge'),
+    bstyle:document.getElementById('f-bstyle'),
+    shop:document.getElementById('f-shop'),
+    crop:document.getElementById('f-crop'),
+    w:document.getElementById('f-w'), h:document.getElementById('f-h')
+  };
+  var S={ pad:document.getElementById('s-pad'), fs:document.getElementById('s-fs'), rot:document.getElementById('s-rot'),
+          pfs:document.getElementById('s-pfs'), px:document.getElementById('s-px'), py:document.getElementById('s-py') };
+  var V={ pad:document.getElementById('v-pad'), fs:document.getElementById('v-fs'), rot:document.getElementById('v-rot'),
+          pfs:document.getElementById('v-pfs'), px:document.getElementById('v-px'), py:document.getElementById('v-py') };
+
+  function syncSliders(){
+    V.pad.textContent=(+S.pad.value).toFixed(1)+' mm';
+    V.fs.textContent=S.fs.value+'%';
+    V.rot.textContent=S.rot.value+'°';
+    V.pfs.textContent=S.pfs.value+'%';
+    V.px.textContent=S.px.value+' mm';
+    V.py.textContent=S.py.value+' mm';
+  }
+  function fillForm(c){
+    F.name.value=c.name||''; F.price.value=c.price||'';
+    F.unit.value=c.unit||''; F.spec.value=c.spec||''; F.sale.checked=!!c.sale;
+    F.shopOn.checked=(c.showShop!==false);
+    F.badge.value=c.badge||'特價'; F.bstyle.value=c.bstyle||'tag';
+    S.pad.value=(c.pad==null?8:c.pad); S.fs.value=c.fs||100; S.rot.value=c.rot||0;
+    F.w.value=Math.round(c.w*10)/10; F.h.value=Math.round(c.h*10)/10;
+    S.pfs.value=(c.pfs==null?100:c.pfs); S.px.value=Math.round(c.px||0); S.py.value=Math.round(c.py||0);
+    syncSliders();
+  }
+  var dirtyBox=document.getElementById('dirty'), btnUpdate=null;
+  function setDirty(on){
+    dirtyBox.classList.toggle('show', !!on && !!selId);
+    if(btnUpdate) btnUpdate.classList.toggle('hot', !!on && !!selId);
+  }
+  function select(id){ selId=id; var c=sel(); if(c) fillForm(c); setDirty(false); markLayout(); render(); }
+
+  /* ===== 指標操作：移動 / 縮放 / 旋轉 ===== */
+  var drag=null;
+  function ptMM(e){
+    var r=page.getBoundingClientRect();
+    return { x:(e.clientX-r.left)/(PXMM*scale), y:(e.clientY-r.top)/(PXMM*scale) };
+  }
+  page.addEventListener('pointerdown',function(e){
+    var el=e.target.closest('.card'); if(!el) return;
+    var c=byId(el.dataset.id); if(!c) return;
+    if(c.id!==selId){ select(c.id); el=page.querySelector('.card[data-id="'+c.id+'"]'); }
+    var ah=e.target.closest('[data-act]');
+    var act=ah?ah.dataset.act:'move';
+    var p=ptMM(e);
+    drag={ id:c.id, act:act, p0:p,
+           c0:{x:c.x,y:c.y,w:c.w,h:c.h,rot:c.rot||0,px:c.px||0,py:c.py||0},
+           a0:Math.atan2(p.y-(c.y+c.h/2), p.x-(c.x+c.w/2))*180/Math.PI };
+    e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId);
     e.preventDefault();
   });
+  page.addEventListener('pointermove',function(e){
+    if(!drag) return;
+    var c=byId(drag.id); if(!c) return;
+    var p=ptMM(e), dx=p.x-drag.p0.x, dy=p.y-drag.p0.y, o=drag.c0;
 
-  sizeButtons(); measure(); load(); render();
-  window.addEventListener('resize',function(){ measure(); fit(); });
+    if(drag.act==='move'){
+      c.x=o.x+dx; c.y=o.y+dy;
+    }else if(drag.act==='price'){
+      var rp=-(o.rot)*Math.PI/180;
+      c.px=clamp(o.px+(dx*Math.cos(rp)-dy*Math.sin(rp)),-120,120);
+      c.py=clamp(o.py+(dx*Math.sin(rp)+dy*Math.cos(rp)),-160,160);
+      var pel=page.querySelector('.card[data-id="'+c.id+'"] .pr');
+      if(pel) pel.style.transform='translate('+c.px+'mm,'+c.py+'mm)';
+      S.px.value=Math.round(c.px); S.py.value=Math.round(c.py); syncSliders();
+      e.preventDefault(); return;
+    }else if(drag.act==='resize'){
+      var r=-(o.rot)*Math.PI/180;
+      var lx=dx*Math.cos(r)-dy*Math.sin(r), ly=dx*Math.sin(r)+dy*Math.cos(r);
+      var nw=clamp(o.w+lx,25,AW), nh=clamp(o.h+ly,25,AH);
+      var rr=o.rot*Math.PI/180, C={x:o.x+o.w/2,y:o.y+o.h/2};
+      var tlx=C.x+(-o.w/2)*Math.cos(rr)-(-o.h/2)*Math.sin(rr);
+      var tly=C.y+(-o.w/2)*Math.sin(rr)+(-o.h/2)*Math.cos(rr);
+      var ncx=tlx+(nw/2)*Math.cos(rr)-(nh/2)*Math.sin(rr);
+      var ncy=tly+(nw/2)*Math.sin(rr)+(nh/2)*Math.cos(rr);
+      c.w=nw; c.h=nh; c.x=ncx-nw/2; c.y=ncy-nh/2;
+    }else if(drag.act==='rotate'){
+      var a=Math.atan2(p.y-(o.y+o.h/2), p.x-(o.x+o.w/2))*180/Math.PI;
+      var deg=o.rot+(a-drag.a0);
+      deg=((deg+180)%360+360)%360-180;
+      [0,15,30,45,60,90,-15,-30,-45,-60,-90,180,-180].forEach(function(s){
+        if(Math.abs(deg-s)<3) deg=s;
+      });
+      c.rot=Math.round(deg);
+      S.rot.value=c.rot; syncSliders();
+    }
+    fitInSafe(c);
+    var el=page.querySelector('.card[data-id="'+c.id+'"]');
+    if(el){
+      el.style.left=c.x+'mm'; el.style.top=c.y+'mm';
+      el.style.width=c.w+'mm'; el.style.height=c.h+'mm';
+      el.style.transform='rotate('+(c.rot||0)+'deg)';
+    }
+    e.preventDefault();
+  });
+  function endDrag(){ if(drag){ drag=null; var c=sel(); if(c) fillForm(c); render(); } }
+  page.addEventListener('pointerup',endDrag);
+  page.addEventListener('pointercancel',endDrag);
+
+  /* ===== 按鈕 ===== */
+  function readForm(){
+    return { name:F.name.value.trim(), price:F.price.value.trim(),
+             unit:F.unit.value.trim(), spec:F.spec.value.trim(), sale:F.sale.checked,
+             badge:(F.badge.value.trim()||'特價'), bstyle:F.bstyle.value,
+             showShop:F.shopOn.checked };
+  }
+  function freeSpot(){
+    var g=gridOf(), n=state.cards.length%(g.c*g.r);
+    return { x:AX+(n%g.c)*g.w, y:AY+Math.floor(n/g.c)*g.h, w:g.w, h:g.h };
+  }
+  btnUpdate=document.getElementById('b-update');
+  ['name','price','unit','spec'].forEach(function(k){
+    F[k].addEventListener('input', function(){ setDirty(true); });
+  });
+
+  document.getElementById('b-add').onclick=function(){
+    var f=readForm(), s=freeSpot();
+    var c={ id:'c'+(state.seq++), name:f.name||'品名', price:f.price||'0', unit:f.unit, spec:f.spec,
+            sale:f.sale, badge:f.badge, bstyle:f.bstyle, showShop:f.showShop,
+            layout:state.layout, x:s.x, y:s.y, w:s.w, h:s.h, rot:0, pad:+S.pad.value, fs:+S.fs.value };
+    fitInSafe(c); state.cards.push(c); select(c.id);
+  };
+  document.getElementById('b-update').onclick=function(){
+    var c=sel(); if(!c) return;
+    var f=readForm();
+    c.name=f.name; c.price=f.price; c.unit=f.unit; c.spec=f.spec; c.sale=f.sale; c.badge=f.badge; c.bstyle=f.bstyle; c.showShop=f.showShop;
+    c.pad=+S.pad.value; c.fs=+S.fs.value; c.rot=+S.rot.value;
+    fitInSafe(c); setDirty(false); render();
+  };
+  document.getElementById('b-copy').onclick=function(){
+    var c=sel(); if(!c) return;
+    var n=JSON.parse(JSON.stringify(c));
+    n.id='c'+(state.seq++); n.x+=5; n.y+=5; fitInSafe(n);
+    state.cards.push(n); select(n.id);
+  };
+  document.getElementById('b-del').onclick=function(){
+    var c=sel(); if(!c) return;
+    state.cards=state.cards.filter(function(x){ return x.id!==c.id; });
+    selId=null; render();
+  };
+  document.getElementById('b-deselect').onclick=function(){ selId=null; setDirty(false); render(); };
+  document.getElementById('b-auto').onclick=function(){
+    var g=gridOf(), n=g.c*g.r;
+    state.cards.forEach(function(c,i){
+      var s2=i%n;
+      c.rot=0; c.w=g.w; c.h=g.h;
+      c.x=AX+(s2%g.c)*g.w; c.y=AY+Math.floor(s2/g.c)*g.h;
+      fitInSafe(c);
+    });
+    var c2=sel(); if(c2) fillForm(c2);
+    render();
+  };
+  document.getElementById('b-print').onclick=function(){ window.print(); };
+
+  S.pad.oninput=function(){ syncSliders(); var c=sel(); if(c){ c.pad=+S.pad.value; render(); } };
+  S.fs.oninput =function(){ syncSliders(); var c=sel(); if(c){ c.fs=+S.fs.value; render(); } };
+  S.rot.oninput=function(){ syncSliders(); var c=sel(); if(c){ c.rot=+S.rot.value; fitInSafe(c); render(); } };
+  S.pfs.oninput=function(){ syncSliders(); var c=sel(); if(c){ c.pfs=+S.pfs.value; render(); } };
+  S.px.oninput =function(){ syncSliders(); var c=sel(); if(c){ c.px=+S.px.value; render(); } };
+  S.py.oninput =function(){ syncSliders(); var c=sel(); if(c){ c.py=+S.py.value; render(); } };
+  document.getElementById('b-pfs-all').onclick=function(){
+    var v=+S.pfs.value; state.cards.forEach(function(c){ c.pfs=v; }); render();
+  };
+  document.getElementById('b-p-reset').onclick=function(){
+    var c=sel(); if(!c) return;
+    c.px=0; c.py=0; c.pfs=100; fillForm(c); render();
+  };
+  document.getElementById('b-pad-all').onclick=function(){
+    var v=+S.pad.value; state.cards.forEach(function(c){ c.pad=v; }); render();
+  };
+  document.getElementById('b-fs-all').onclick=function(){
+    var v=+S.fs.value; state.cards.forEach(function(c){ c.fs=v; }); render();
+  };
+  document.getElementById('b-rot0').onclick=function(){
+    S.rot.value=0; syncSliders(); var c=sel(); if(c){ c.rot=0; fitInSafe(c); render(); }
+  };
+  function setSize(w,h){
+    var c=sel(); if(!c) return;
+    if(w) c.w=clamp(w,25,AW);
+    if(h) c.h=clamp(h,25,AH);
+    fitInSafe(c); fillForm(c); render();
+  }
+  F.w.oninput=function(){ var v=parseFloat(F.w.value); if(!isNaN(v)) setSize(v,null); };
+  F.h.oninput=function(){ var v=parseFloat(F.h.value); if(!isNaN(v)) setSize(null,v); };
+  var PRESET={ 'b-g44':[AW/4,AH/4], 'b-g34':[AW/3,AH/4], 'b-g43':[AW/4,AH/3],
+               'b-s1':[80,30], 'b-s2':[160,40], 'b-s3':[150,60] };
+  function markGrid(){
+    var z=cellSize();
+    Object.keys(PRESET).forEach(function(id){
+      var v=PRESET[id];
+      document.getElementById(id).classList.toggle('on',
+        Math.abs(z.w-v[0])<0.05 && Math.abs(z.h-v[1])<0.05);
+    });
+  }
+  Object.keys(PRESET).forEach(function(id){
+    document.getElementById(id).onclick=function(){
+      var v=PRESET[id];
+      state.cell={w:v[0],h:v[1]};
+      markGrid(); setSize(v[0],v[1]); save();
+    };
+  });
+
+  /* 預覽區分隔線：拖曳調整高度 */
+  (function(){
+    var sp=document.getElementById('splitter'), st=null;
+    sp.addEventListener('pointerdown',function(e){
+      st={y:e.clientY, h:box.getBoundingClientRect().height};
+      sp.setPointerCapture&&sp.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    sp.addEventListener('pointermove',function(e){
+      if(!st) return;
+      state.ph=Math.max(140, st.h+(e.clientY-st.y));
+      fit(); render(); e.preventDefault();
+    });
+    function done(){ if(st){ st=null; save(); } }
+    sp.addEventListener('pointerup',done);
+    sp.addEventListener('pointercancel',done);
+    sp.addEventListener('dblclick',function(){ state.ph=0; fit(); render(); save(); });
+  })();
+
+  document.getElementById('b-fold').onclick=function(){
+    var f=document.body.classList.toggle('folded');
+    this.textContent=f?'展開預覽':'收合預覽';
+  };
+  function liveBadge(){
+    var c=sel(); if(!c) return;
+    c.sale=F.sale.checked; c.badge=F.badge.value.trim()||'特價'; c.bstyle=F.bstyle.value; render();
+  }
+  function markLayout(){
+    var c=sel(), v=c?(c.layout||'v'):state.layout;
+    document.getElementById('b-lay-v').classList.toggle('on', v==='v');
+    document.getElementById('b-lay-h').classList.toggle('on', v==='h');
+  }
+  function setLayout(v){
+    state.layout=v;
+    var c=sel(); if(c) c.layout=v;
+    markLayout(); render(); save();
+  }
+  document.getElementById('b-lay-v').onclick=function(){ setLayout('v'); };
+  document.getElementById('b-lay-h').onclick=function(){ setLayout('h'); };
+  document.getElementById('b-lay-all').onclick=function(){
+    var c=sel(), v=c?(c.layout||'v'):state.layout;
+    state.cards.forEach(function(x){ x.layout=v; }); render(); save();
+  };
+
+  F.shopOn.onchange=function(){ var c=sel(); if(c){ c.showShop=F.shopOn.checked; render(); } };
+  document.getElementById('b-shopon-all').onclick=function(){
+    state.cards.forEach(function(c){ c.showShop=true; }); F.shopOn.checked=true; render();
+  };
+  document.getElementById('b-shopoff-all').onclick=function(){
+    state.cards.forEach(function(c){ c.showShop=false; }); F.shopOn.checked=false; render();
+  };
+  F.sale.onchange=liveBadge; F.bstyle.onchange=liveBadge; F.badge.oninput=liveBadge;
+
+  F.shop.oninput=function(){ state.shop=F.shop.value; render(); };
+  F.crop.onchange=function(){ state.crop=F.crop.checked; render(); };
+
+  /* ===== 啟動 ===== */
+  load();
+  F.shop.value=state.shop; F.crop.checked=state.crop;
+  if(!state.cards.length){
+    [['高麗菜','45','/顆','雲林西螺 · 1.2kg↑',false],
+     ['珍珠芭樂','89','/斤','燕巢 · 特級大顆',true]].forEach(function(a,i){
+      state.cards.push({ id:'c'+(state.seq++), name:a[0], price:a[1], unit:a[2], spec:a[3], sale:a[4], badge:'特價',
+        x:AX+(i%2)*DEF_W, y:AY, w:DEF_W, h:DEF_H, rot:0, pad:8, fs:100 });
+    });
+  }
+  syncSliders(); markGrid(); markLayout(); fit(); render();
+  window.addEventListener('resize',fit);
+  window.addEventListener('orientationchange',function(){ setTimeout(fit,200); });
 })();
 </script>
 </body>
