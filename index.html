@@ -299,7 +299,7 @@
   </div>
   <label style="margin-top:8px">實體卡規格</label>
   <div class="btns" style="grid-template-columns:1fr 1fr 1fr;margin-top:0">
-    <button id="b-s1">冰箱小<br><span class="sub">80×30 · 18張</span></button>
+    <button id="b-s1">冰箱小<br><span class="sub">90×90 · ?張</span></button>
     <button id="b-s2">冰箱大<br><span class="sub">160×40 · 7張</span></button>
     <button id="b-s3">常溫小<br><span class="sub">150×60 · 留底2cm</span></button>
   </div>
@@ -828,7 +828,7 @@
   F.w.oninput=function(){ var v=parseFloat(F.w.value); if(!isNaN(v)) setSize(v,null); };
   F.h.oninput=function(){ var v=parseFloat(F.h.value); if(!isNaN(v)) setSize(null,v); };
   var PRESET={ 'b-g44':[AW/4,AH/4], 'b-g34':[AW/3,AH/4], 'b-g43':[AW/4,AH/3],
-               'b-s1':[80,30,0,2], 'b-s2':[160,40,0,3], 'b-s3':[150,60,KEEP,3] };   // [寬,高,留底,留白]
+               'b-s1':[90,40,0,2], 'b-s2':[160,40,0,3], 'b-s3':[150,60,KEEP,3] };   // [寬,高,留底,留白]
   function markGrid(){
     var z=cellSize();
     Object.keys(PRESET).forEach(function(id){
